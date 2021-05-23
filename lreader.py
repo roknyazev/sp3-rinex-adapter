@@ -1,15 +1,16 @@
 import datetime
 
 
-class IReader:
+class AReader:
     def __init__(self, path):
         self.path = path
+        self.spacecrafts = []
 
     def read(self):
         pass
 
 
-class SP3Reader(IReader):
+class SP3Reader(AReader):
     def __init__(self, path):
         super().__init__(path)
         self.flag = None  # Coordinates or velocity flag
@@ -19,7 +20,6 @@ class SP3Reader(IReader):
         self.orbit_type = None
         self.calc_step = None
         self.spacecraft_count = None
-        self.spacecrafts = []
         self.read()
 
     def read(self):
@@ -90,3 +90,63 @@ class SP3Reader(IReader):
                     self.spacecrafts[j][3][3].append(float(line[46:60]))
                     j += 1
                     i += 1
+
+
+class KeplerianElements:
+    def __int__(self,
+                eccentricity,
+                semimajor_axis,
+                inclination,
+                ascending_node_longitude,
+                periapsis_argument,
+                true_anomaly):
+        self.eccentricity = eccentricity
+        self.semimajor_axis = semimajor_axis
+        self.inclination = inclination
+        self.ascending_node_longitude = ascending_node_longitude
+        self.periapsis_argument = periapsis_argument
+        self.true_anomaly = true_anomaly
+
+    def get_elements(self):
+        return [self.eccentricity,
+                self.semimajor_axis,
+                self.inclination,
+                self.ascending_node_longitude,
+                self.periapsis_argument,
+                self.true_anomaly]
+
+
+class RINEXReader(AReader):
+    def __init__(self, path):
+        super().__init__(path)
+
+    def read(self):
+        with open(self.path, 'r') as file:
+            lines = file.read().splitlines()
+        self.parse_header(lines)
+        self.parse_location(lines)
+
+    def parse_header(self, lines):
+        pass
+
+    def parse_location(self, lines):
+        i = 0
+        while lines[i].find("END OF HEADER") == -1:
+            i += 1
+        i += 1
+        while i < len(lines) and lines[i][0] != '\n':
+            line = lines[i]
+            identifier = int(line[0:3])
+
+            epoch = datetime.datetime()
+            kepler_elem = KeplerianElements()
+
+            for sp in self.spacecrafts:
+                if sp[0] == identifier:
+                    sp[2].append(epoch)
+                    sp[3].append(kepler_elem)
+
+
+            # spacecraft = [identifier, None, [], []]  # Identifier, precision, epoch, Keplerian elements
+            i += 8
+
