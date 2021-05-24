@@ -131,8 +131,10 @@ class RINEXGPSReader(AReader):
             i += 1
         i += 1
         while lines[i].strip() and i < len(lines):
-            index = int(lines[i][0:3]) + 1
-            identifier = 'G' + str(index)
+            index = str(int(lines[i][0:3]))
+            if len(index) == 1:
+                index = '0' + index
+            identifier = 'G' + index
 
             epoch = datetime.datetime(2000 + int(lines[i][3:(3+2)]),
                                       int(lines[i][6:(6+2)]),
