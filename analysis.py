@@ -1,7 +1,7 @@
 import ladapter
 
 
-class Analisys:
+class Analysis:
     def __init__(self, path):
         if path.find(".sp3") != -1:
             self.adapter = ladapter.SP3Adapter()
