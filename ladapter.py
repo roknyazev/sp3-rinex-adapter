@@ -16,9 +16,47 @@ class SP3Adapter(AAdapter):
     def __init__(self):
         super().__init__()
 
+    @staticmethod
+    def earth_angle(hour, minute, second):
+        cur_time = hour * 3600 + minute * 60 + second
+        rot = 360 / 86400
+        result = rot * cur_time
+        return result * np.pi / 180
+
+    @staticmethod
+    def aerth_rotation(angle):
+        return np.array([[np.cos(angle), -np.sin(angle), 0],
+                         [np.sin(angle), np.cos(angle), 0],
+                         [0, 0, 1]])
+
     def calc(self, path):
         self.reader = lreader.SP3Reader(path)
         self.data = copy.deepcopy(self.reader.spacecrafts)
+        for sp in self.data:
+            sp[3][0] = []
+            sp[3][1] = []
+            sp[3][2] = []
+        j = 0
+        for sp in self.reader.spacecrafts:
+            date = sp[2]
+            coordinates = sp[3]
+            i = 0
+            for d in date:
+                x = coordinates[0][i]
+                y = coordinates[1][i]
+                z = coordinates[2][i]
+                vec = np.array([x, y, z]).T
+                angle = self.earth_angle(d.hour, d.minute, d.second)
+                rot = self.aerth_rotation(angle)
+                result = rot.dot(vec)
+                self.data[j][3][0].append(result[0])
+                self.data[j][3][1].append(result[1])
+                self.data[j][3][2].append(result[2])
+                i += 1
+            j += 1
+        print(123)
+
+
 
 
 class RINEXAdapter(AAdapter):
@@ -75,3 +113,6 @@ class RINEXAdapter(AAdapter):
                 sp[3][1].append(coordinates[1][0])
                 sp[3][2].append(coordinates[2][0])
             i += 1
+
+
+
